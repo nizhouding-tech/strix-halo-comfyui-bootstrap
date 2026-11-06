@@ -11,6 +11,27 @@
 
 > 社区工具，与 ComfyUI / AMD / DeepSeek 官方无关。
 
+## 背景
+
+Strix Halo（Ryzen AI MAX / Radeon 8060S）是当下最适合本地跑生成式工作负载的消费级机器之一：16 个 Zen 5 核心、40 组 RDNA 3.5 CU、最高 128GB 统一内存。但它不是 CUDA 机器，而整套 ComfyUI Windows 分发包都假设你有一张 NVIDIA 卡。
+
+于是流程注定走不通：
+
+1. 装官方 ComfyUI 便携版；
+2. 它自带的是 `torch ....+cu130`；
+3. `torch.cuda.is_available()` 返回 `False`；
+4. ComfyUI 悄悄退回 CPU；
+5. 每一张图都比该有的速度慢约 10 倍（实测同一工作流：CPU 257 秒 vs GPU 27 秒）。
+
+手动修复相当于做一次小型调研：找到 `gfx1151` 对应的 ROCm nightly 索引、挑**同一天构建**的 `torch`/`torchvision`、装 `rocm-sdk-*` 运行库、再验证设备真的可见。这个仓库把这些调研固化成一条命令，让下一个 Strix Halo 用户不用再踩一遍。
+
+## 这个项目解决什么
+
+- **把「能跑」变成「跑对」**：同一工作流从 257 秒降到 27 秒（9.5×），这是本项目最直接的意义；
+- **减少一次性研究成本**：ROCm 索引、版本配对、运行库依赖这些信息散落在各处，这里一次性说清；
+- **让显存/内存按需占用**：附带的 `supervise.js` 支持「用图才启动、空闲 30 分钟自动退出」，不生成时 RAM/显存归零；
+- **可复现的基准与排错**：`docs/BENCHMARK.md` 给出完整测试条件，`docs/TROUBLESHOOTING.md` 覆盖最常见四个坑。
+
 ## 为什么需要它
 
 在 Strix Halo 上按官方文档装完，`python -c "import torch; print(torch.__version__, torch.cuda.is_available())"` 得到的是：
@@ -84,6 +105,13 @@ node D:\ComfyUI\supervise.js --port 8188 --idle-min 30
 
 - `torch.cuda.is_available()` 仍是 `False` → CUDA 版没换掉，加 `-Force` 重跑；
 - `operator torchvision::nms does not exist` → torch / torchvision 版本不配对，换同日构建。
+
+## 联系
+
+- 邮箱：**nizhouding@gmail.com** / **1005245828@qq.com**
+- GitHub：[@nizhouding-tech](https://github.com/nizhouding-tech)
+- 欢迎 issue 与 PR；反馈问题时请附上 ComfyUI 版本、torch 版本，以及
+  `python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"` 的输出。
 
 ## 许可
 

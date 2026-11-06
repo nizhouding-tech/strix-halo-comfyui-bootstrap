@@ -9,6 +9,26 @@ idle-exit supervisor next to it.
 
 > Unofficial community tool. Not affiliated with ComfyUI, AMD or DeepSeek.
 
+## Background
+
+Strix Halo (Ryzen AI MAX, Radeon 8060S) is one of the best consumer machines for local generative
+workloads: 16 Zen 5 cores, 40 RDNA 3.5 CUs and up to 128 GB of unified memory. What it is *not* is a
+CUDA machine — and the entire ComfyUI Windows distribution assumes NVIDIA.
+
+The result is a predictable dead end:
+
+1. you install the official ComfyUI portable build,
+2. it ships `torch ....+cu130`,
+3. `torch.cuda.is_available()` is `False`,
+4. ComfyUI silently falls back to the CPU,
+5. and every generation is ~10× slower than it should be (measured: 257 s vs 27 s for the same
+   workflow on this machine).
+
+Fixing it by hand is a research project: find the right ROCm nightly index for `gfx1151`, pick a
+`torch`/`torchvision` pair built on the same day, install the `rocm-sdk-*` runtime wheels, and
+verify the GPU is actually visible. This repository turns that research into one command, so the
+next Strix Halo owner does not have to repeat it.
+
 ## Why
 
 On Strix Halo machines the usual "install ComfyUI portable" flow ends with:
@@ -104,6 +124,13 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md). The two most common fail
 - `torch.cuda.is_available() == False` → the CUDA wheels were not replaced; re-run with `-Force`.
 - `operator torchvision::nms does not exist` → `torchvision` does not match `torch`; install a pair
   built on the same date.
+
+## Contact
+
+- Email: **nizhouding@gmail.com** / **1005245828@qq.com**
+- GitHub: [@nizhouding-tech](https://github.com/nizhouding-tech)
+- Issues and PRs are welcome; please include `ComfyUI version`, `torch version` and the output of
+  `python -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"`.
 
 ## License
 
