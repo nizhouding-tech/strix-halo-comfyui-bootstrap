@@ -1,0 +1,22 @@
+# local artifacts
+downloads/
+logs/
+models/
+output/
+input/
+*.7z
+*.part
+*.part*
+
+# supervisor state
+.supervisor.lock
+.supervisor.state.json
+
+# node
+node_modules/
+
+# editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
